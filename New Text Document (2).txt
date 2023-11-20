@@ -1,0 +1,422 @@
+-- 1. Create a table employee with (emp_no, emp_name, emp_address)
+CREATE TABLE employee (
+    emp_no INT PRIMARY KEY,
+    emp_name VARCHAR(255),
+    emp_address VARCHAR(255)
+);
+
+-- 2. Insert five employees information.
+INSERT INTO employee (emp_no, emp_name, emp_address) VALUES
+(1, 'John Doe', 'Street 1, City 1'),
+(2, 'Jane Smith', 'Street 2, City 1'),
+(3, 'Bob Johnson', 'Street 3, City 2'),
+(4, 'Alice Brown', 'Street 4, City 2'),
+(5, 'Charlie White', 'Street 5, City 3');
+
+-- 3. Display names of all employees.
+SELECT emp_name FROM employee;
+
+-- 4. Display all the employees from ‘MANIPAL’.
+SELECT * FROM employee WHERE emp_address = 'MANIPAL';
+
+-- 5. Add a column named salary to employee table.
+ALTER TABLE employee ADD COLUMN salary INT;
+
+-- 6. Assign the salary for all employees.
+UPDATE employee SET salary = 50000; -- Set the salary as per your requirement
+
+-- 7. View the structure of the table employee using describe.
+DESCRIBE employee; -- or SHOW COLUMNS FROM employee;
+
+-- 8. Delete all the employees from ‘MANGALORE’
+DELETE FROM employee WHERE emp_address = 'MANGALORE';
+
+-- 9. Rename employee as employee1.
+ALTER TABLE employee RENAME TO employee1;
+
+-- 10. Drop the table employee1.
+DROP TABLE employee1;
+
+
+-- 1. Create Employee table with constraints
+CREATE TABLE Employee (
+    EmpNo INT PRIMARY KEY,
+    EmpName VARCHAR(255) NOT NULL,
+    Gender CHAR(1) NOT NULL CHECK (Gender IN ('M', 'F')),
+    Salary DECIMAL(10,2) NOT NULL,
+    Address VARCHAR(255) NOT NULL,
+    DeptNo INT,
+    CONSTRAINT fk_DeptNo FOREIGN KEY (DeptNo) REFERENCES Department(DeptNo)
+);
+
+-- 2. Create Department table with constraints
+CREATE TABLE Department (
+    DeptNo INT PRIMARY KEY,
+    DeptName VARCHAR(255) UNIQUE
+);
+
+-- 3. Make DNo of Employee as foreign key which refers to DeptNo of Department.
+-- (This constraint is added when creating the Employee table)
+
+-- 4. Insert valid tuples into Employee and Department
+INSERT INTO Department (DeptNo, DeptName) VALUES
+(1, 'HR'),
+(2, 'IT');
+
+INSERT INTO Employee (EmpNo, EmpName, Gender, Salary, Address, DeptNo) VALUES
+(101, 'John Doe', 'M', 60000.00, 'Street 1, City 1', 1),
+(102, 'Jane Smith', 'F', 55000.00, 'Street 2, City 1', 1),
+(103, 'Bob Johnson', 'M', 70000.00, 'Street 3, City 2', 2);
+
+-- 5. Attempt to violate constraints
+-- Try inserting a tuple into Employee with null values
+-- This should fail due to NOT NULL constraints
+INSERT INTO Employee (EmpNo, EmpName, Gender, Salary, Address, DeptNo) VALUES (104, NULL, 'M', NULL, 'Street 4, City 2', 2);
+
+-- Try inserting a tuple into Employee with invalid Gender
+-- This should fail due to CHECK constraint
+INSERT INTO Employee (EmpNo, EmpName, Gender, Salary, Address, DeptNo) VALUES (105, 'Alice Brown', 'X', 50000.00, 'Street 5, City 3', 2);
+
+-- 6. Attempt to modify/delete a tuple violating constraints
+-- Try deleting a department tuple that has employees
+-- This should fail due to the foreign key constraint
+DELETE FROM Department WHERE DeptNo = 1;
+
+-- 7. Modify the foreign key constraint to enable cascading deletes
+-- This will automatically delete associated employees when a department is deleted
+ALTER TABLE Employee DROP FOREIGN KEY fk_DeptNo;
+ALTER TABLE Employee ADD CONSTRAINT fk_DeptNo FOREIGN KEY (DeptNo) REFERENCES Department(DeptNo) ON DELETE CASCADE;
+
+-- 9. List all Students with names and their department names.
+SELECT s.StudentID, s.StudentName, d.DepartmentName
+FROM Students s
+JOIN Departments d ON s.DepartmentID = d.DepartmentID;
+
+-- 10. List all instructors in CSE department.
+SELECT * 
+FROM Instructors 
+WHERE DepartmentID = (SELECT DepartmentID FROM Departments WHERE DepartmentName = 'CSE');
+
+-- 11. Find the names of courses in CSE department which have 3 credits.
+SELECT CourseName
+FROM Courses
+WHERE DepartmentID = (SELECT DepartmentID FROM Departments WHERE DepartmentName = 'CSE')
+AND Credits = 3;
+
+-- 12. For the student with ID 12345, show all course-id and title of all courses registered for by the student.
+SELECT c.CourseID, c.CourseName
+FROM Enrollments e
+JOIN Courses c ON e.CourseID = c.CourseID
+WHERE e.StudentID = 12345;
+
+-- 13. List all the instructors whose salary is in between 40000 and 90000.
+SELECT * 
+FROM Instructors 
+WHERE Salary BETWEEN 40000 AND 90000;
+
+-- 14. Display the IDs of all instructors who have never taught a course.
+SELECT InstructorID
+FROM Instructors
+WHERE InstructorID NOT IN (SELECT DISTINCT InstructorID FROM Teachings);
+
+-- 15. Find the student names, course names, and the year, for all students those who have attended classes in room-number 303.
+SELECT s.StudentName, c.CourseName, YEAR(AttendanceDate) AS Year
+FROM Students s
+JOIN Enrollments e ON s.StudentID = e.StudentID
+JOIN Courses c ON e.CourseID = c.CourseID
+JOIN Classrooms cl ON c.RoomNumber = cl.RoomNumber
+WHERE cl.RoomNumber = 303;
+
+-- Continue with the remaining problems following a similar format.
+
+-- 1. Find courses that ran in Fall 2009 or in Spring 2010
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester = 'Fall 2009'
+INTERSECT ALL
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester = 'Spring 2010';
+
+-- 2. Find courses that ran in Fall 2009 and in Spring 2010
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester = 'Fall 2009'
+MINUS
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester = 'Spring 2010';
+
+-- 3. Find courses that ran in Fall 2009 but not in Spring 2010
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester = 'Fall 2009'
+EXCEPT
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester = 'Spring 2010';
+
+-- 4. Find the name of the course for which none of the students registered.
+SELECT CourseID, CourseName
+FROM Courses
+WHERE CourseID NOT IN (SELECT CourseID FROM Enrollments);
+
+-- 5. Find courses offered in Fall 2009 and in Spring 2010.
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester IN ('Fall 2009', 'Spring 2010');
+
+-- 6. Find the total number of students who have taken a course taught by the instructor with ID 10101.
+SELECT COUNT(DISTINCT StudentID) AS TotalStudents
+FROM Enrollments
+WHERE CourseID IN (SELECT CourseID FROM Teachings WHERE InstructorID = 10101);
+
+-- 7. Find courses offered in Fall 2009 but not in Spring 2010.
+SELECT CourseID, CourseName
+FROM Courses
+WHERE Semester = 'Fall 2009'
+AND CourseID NOT IN (SELECT CourseID FROM Courses WHERE Semester = 'Spring 2010');
+
+-- 8. Find the names of all students whose name is the same as the instructor’s name.
+SELECT s.StudentName
+FROM Students s, Instructors i
+WHERE s.StudentName = i.InstructorName;
+
+-- Continue with the remaining exercises using similar SQL constructs and logic.
+
+-- 1. Find the number of students in each course.
+SELECT CourseID, COUNT(StudentID) AS NumStudents
+FROM Enrollments
+GROUP BY CourseID;
+
+-- 2. Find those departments where the average number of students is greater than 10.
+SELECT DepartmentID, AVG(NumStudents) AS AvgStudents
+FROM (SELECT DepartmentID, COUNT(StudentID) AS NumStudents
+      FROM Enrollments
+      GROUP BY DepartmentID) AS DepartmentStats
+GROUP BY DepartmentID
+HAVING AVG(NumStudents) > 10;
+
+-- 3. Find the total number of courses in each department.
+SELECT DepartmentID, COUNT(DISTINCT CourseID) AS NumCourses
+FROM Courses
+GROUP BY DepartmentID;
+
+-- 4. Find the names and average salaries of all departments whose average salary is greater than 42000.
+SELECT DepartmentName, AVG(Salary) AS AvgSalary
+FROM Instructors
+GROUP BY DepartmentName
+HAVING AVG(Salary) > 42000;
+
+-- 5. Find the enrollment of each section that was offered in Spring 2009.
+SELECT SectionID, COUNT(StudentID) AS Enrollment
+FROM Enrollments
+WHERE Semester = 'Spring 2009'
+GROUP BY SectionID;
+
+-- 6. List all the courses with prerequisite courses, then display course id in increasing order.
+SELECT c.CourseID, c.CourseName, p.PrerequisiteCourseID
+FROM Courses c
+JOIN Prerequisites p ON c.CourseID = p.CourseID
+ORDER BY c.CourseID ASC;
+
+-- 7. Display the details of instructors sorting the salary in decreasing order.
+SELECT * FROM Instructors
+ORDER BY Salary DESC;
+
+-- 8. Find the maximum total salary across the departments.
+SELECT MAX(TotalSalary) AS MaxTotalSalary
+FROM (SELECT DepartmentID, SUM(Salary) AS TotalSalary
+      FROM Instructors
+      GROUP BY DepartmentID) AS DepartmentTotals;
+
+-- 9. Find the average instructors’ salaries of those departments where the average salary is greater than 42000.
+SELECT DepartmentName, AVG(Salary) AS AvgSalary
+FROM Instructors
+GROUP BY DepartmentName
+HAVING AVG(Salary) > 42000;
+
+-- 10. Find the sections that had the maximum enrollment in Spring 2010.
+SELECT SectionID, COUNT(StudentID) AS Enrollment
+FROM Enrollments
+WHERE Semester = 'Spring 2010'
+GROUP BY SectionID
+ORDER BY Enrollment DESC
+LIMIT 1;
+
+-- Continue with the remaining exercises using similar SQL constructs and logic.
+
+-- 1. Retrieve the birth date and address of the employee(s) whose name is ‘John B. Smith’.
+-- Retrieve the name and address of all employees who work for the ‘Research’ department.
+SELECT BirthDate, Address
+FROM Employees
+WHERE Name = 'John B. Smith';
+
+SELECT Name, Address
+FROM Employees
+WHERE Department = 'Research';
+
+-- 2. For every project located in ‘Stanford’, list the project number, the controlling
+-- department number, and the department manager’s last name, address, and birth date.
+SELECT p.ProjectNumber, p.ControllingDeptNumber, e.LastName, e.Address, e.BirthDate
+FROM Projects p
+JOIN Employees e ON p.ControllingDeptManagerID = e.EmployeeID
+WHERE p.Location = 'Stanford';
+
+-- 3. Find all distinct salaries of employees.
+SELECT DISTINCT Salary
+FROM Employees;
+
+-- 4. For each employee, retrieve the employee’s first and last name and the first and
+-- last name of his or her immediate supervisor.
+SELECT e1.FirstName, e1.LastName, e2.FirstName AS SupervisorFirstName, e2.LastName AS SupervisorLastName
+FROM Employees e1
+LEFT JOIN Employees e2 ON e1.SupervisorID = e2.EmployeeID;
+
+-- 5. Make a list of all project numbers for projects that involve an employee whose
+-- last name is ‘Smith’, either as a worker or as a manager of the department that
+-- controls the project.
+SELECT DISTINCT p.ProjectNumber
+FROM Projects p
+JOIN Employees e ON p.ProjectNumber = e.ProjectNumber
+WHERE e.LastName = 'Smith' OR e.EmployeeID IN (
+    SELECT ControllingDeptManagerID
+    FROM Departments
+    WHERE ManagerID IN (SELECT EmployeeID FROM Employees WHERE LastName = 'Smith')
+);
+
+-- 6. Retrieve all employees who reside in Houston, Texas.
+SELECT *
+FROM Employees
+WHERE Address LIKE '%Houston, Texas%';
+
+-- 7. Show the resulting salaries if every employee working on the ‘ProductX’ project
+-- is given a 10 percent raise.
+UPDATE Employees
+SET Salary = Salary * 1.1
+WHERE EmployeeID IN (
+    SELECT EmployeeID
+    FROM Employees
+    WHERE ProjectNumber = 'ProductX'
+);
+
+-- 8. Retrieve all employees in department 5 whose salary is between 30,000 and 40,000.
+SELECT *
+FROM Employees
+WHERE Department = 5 AND Salary BETWEEN 30000 AND 40000;
+
+-- 9. Retrieve a list of employees and the projects they are working on, ordered by
+-- department and, within each department, ordered alphabetically by last name, then
+-- first name.
+SELECT e.Name, e.Department, p.ProjectName
+FROM Employees e
+LEFT JOIN Projects p ON e.ProjectNumber = p.ProjectNumber
+ORDER BY e.Department, e.LastName, e.FirstName;
+
+-- 10. Retrieve the names of all employees who do not have supervisors.
+SELECT Name
+FROM Employees
+WHERE SupervisorID IS NULL;
+
+-- Continue with the remaining exercises using similar SQL constructs and logic.
+
+-- 1. Retrieve the birth date and address of the employee(s) whose name is ‘John B. Smith’.
+-- Retrieve the name and address of all employees who work for the ‘Research’ department.
+SELECT BirthDate, Address
+FROM Employees
+WHERE Name = 'John B. Smith';
+
+SELECT Name, Address
+FROM Employees
+WHERE Department = 'Research';
+
+-- 2. For every project located in ‘Stanford’, list the project number, the controlling
+-- department number, and the department manager’s last name, address, and birth date.
+SELECT p.ProjectNumber, p.ControllingDeptNumber, e.LastName, e.Address, e.BirthDate
+FROM Projects p
+JOIN Employees e ON p.ControllingDeptManagerID = e.EmployeeID
+WHERE p.Location = 'Stanford';
+
+-- 3. Find all distinct salaries of employees.
+SELECT DISTINCT Salary
+FROM Employees;
+
+-- 4. For each employee, retrieve the employee’s first and last name and the first and
+-- last name of his or her immediate supervisor.
+SELECT e1.FirstName, e1.LastName, e2.FirstName AS SupervisorFirstName, e2.LastName AS SupervisorLastName
+FROM Employees e1
+LEFT JOIN Employees e2 ON e1.SupervisorID = e2.EmployeeID;
+
+-- 5. Make a list of all project numbers for projects that involve an employee whose
+-- last name is ‘Smith’, either as a worker or as a manager of the department that
+-- controls the project.
+SELECT DISTINCT p.ProjectNumber
+FROM Projects p
+JOIN Employees e ON p.ProjectNumber = e.ProjectNumber
+WHERE e.LastName = 'Smith' OR e.EmployeeID IN (
+    SELECT ControllingDeptManagerID
+    FROM Departments
+    WHERE ManagerID IN (SELECT EmployeeID FROM Employees WHERE LastName = 'Smith')
+);
+
+-- 6. Retrieve all employees who reside in Houston, Texas.
+SELECT *
+FROM Employees
+WHERE Address LIKE '%Houston, Texas%';
+
+-- 7. Show the resulting salaries if every employee working on the ‘ProductX’ project
+-- is given a 10 percent raise.
+UPDATE Employees
+SET Salary = Salary * 1.1
+WHERE EmployeeID IN (
+    SELECT EmployeeID
+    FROM Employees
+    WHERE ProjectNumber = 'ProductX'
+);
+
+-- 8. Retrieve all employees in department 5 whose salary is between 30,000 and 40,000.
+SELECT *
+FROM Employees
+WHERE Department = 5 AND Salary BETWEEN 30000 AND 40000;
+
+-- 9. Retrieve a list of employees and the projects they are working on, ordered by
+-- department and, within each department, ordered alphabetically by last name, then
+-- first name.
+SELECT e.Name, e.Department, p.ProjectName
+FROM Employees e
+LEFT JOIN Projects p ON e.ProjectNumber = p.ProjectNumber
+ORDER BY e.Department, e.LastName, e.FirstName;
+
+-- 10. Retrieve the names of all employees who do not have supervisors.
+SELECT Name
+FROM Employees
+WHERE SupervisorID IS NULL;
+
+-- 11. Retrieve the name of each employee who has a dependent with the same first name
+-- and is the same sex as the employee.
+SELECT e1.Name
+FROM Employees e1
+JOIN Dependents d ON e1.EmployeeID = d.EmployeeID
+WHERE d.FirstName = e1.FirstName AND d.Sex = e1.Sex;
+
+-- 12. Retrieve the names of employees who have no dependents.
+SELECT Name
+FROM Employees
+WHERE EmployeeID NOT IN (SELECT DISTINCT EmployeeID FROM Dependents);
+
+-- 13. List the names of managers who have at least one dependent.
+SELECT DISTINCT e.Name
+FROM Employees e
+JOIN Dependents d ON e.EmployeeID = d.EmployeeID
+WHERE e.EmployeeID IN (SELECT DISTINCT ManagerID FROM Departments);
+
+-- 14. Retrieve the Social Security numbers of all employees who work on project
+-- numbers 1, 2, or 3.
+SELECT SocialSecurityNumber
+FROM Employees
+WHERE ProjectNumber IN (1, 2, 3);
+
+-- 15. Find the sum of the salaries of all employees, the maximum salary, the minimum
+-- salary, and the average salary.
+SELECT SUM(Salary) AS TotalSalaries, MAX(Salary) AS MaxSalary, MIN(Salary) AS MinSalary, AVG(Salary) AS AvgSalary
+FROM Employees;
